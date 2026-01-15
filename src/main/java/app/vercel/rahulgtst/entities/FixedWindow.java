@@ -1,10 +1,10 @@
 package app.vercel.rahulgtst.entities;
 
-public class Window {
+public class FixedWindow {
     private long count;
     private long timestamp;
 
-    public Window(long count, long timestamp) {
+    public FixedWindow(long count, long timestamp) {
         this.count = count;
         this.timestamp = timestamp;
     }

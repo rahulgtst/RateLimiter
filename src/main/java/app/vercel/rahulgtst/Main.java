@@ -1,7 +1,7 @@
 package app.vercel.rahulgtst;
 
 import app.vercel.rahulgtst.entities.Request;
-import app.vercel.rahulgtst.strategies.FixedWindow;
+import app.vercel.rahulgtst.strategies.FixedWindowStrategy;
 import app.vercel.rahulgtst.strategies.RateLimiterStrategy;
 
 import java.util.Scanner;
@@ -29,7 +29,7 @@ public class Main {
         long limit = sc.nextLong();
 
         RateLimiter limiter =
-                new RateLimiter(new FixedWindow(limit, duration));
+                new RateLimiter(new FixedWindowStrategy(limit, duration));
 
         for(int i = 1; i <= 5; i++) {
             boolean isValid = limiter.check(new Request("123"));

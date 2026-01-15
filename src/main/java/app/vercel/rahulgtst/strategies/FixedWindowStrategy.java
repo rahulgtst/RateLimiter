@@ -1,15 +1,15 @@
 package app.vercel.rahulgtst.strategies;
 
 import java.util.concurrent.ConcurrentHashMap;
-import app.vercel.rahulgtst.entities.Window;
+import app.vercel.rahulgtst.entities.FixedWindow;
 import app.vercel.rahulgtst.entities.Request;
 
-public class FixedWindow implements RateLimiterStrategy {
-    private final ConcurrentHashMap<String, Window> store;
+public class FixedWindowStrategy implements RateLimiterStrategy {
+    private final ConcurrentHashMap<String, FixedWindow> store;
     private final long MAX_LIMIT;
     private final long DURATION;
 
-    public FixedWindow(long max_limit, long duration) {
+    public FixedWindowStrategy(long max_limit, long duration) {
         MAX_LIMIT=max_limit;
         DURATION=duration;
         store = new ConcurrentHashMap<>();
@@ -18,12 +18,12 @@ public class FixedWindow implements RateLimiterStrategy {
     @Override
     public boolean check(Request req) {
         String userId = req.getUserId();
-        Window window = store.get(userId);
+        FixedWindow window = store.get(userId);
         long now = System.currentTimeMillis();
 
         // First request for user
         if (window == null) {
-            store.put(userId, new Window(1, now));
+            store.put(userId, new FixedWindow(1, now));
             return true;
         }
 
