@@ -1,10 +1,7 @@
 package app.vercel.rahulgtst;
 
 import app.vercel.rahulgtst.entities.Request;
-import app.vercel.rahulgtst.strategies.FixedWindowStrategy;
-import app.vercel.rahulgtst.strategies.RateLimiterStrategy;
-import app.vercel.rahulgtst.strategies.SlidingWindowStrategy;
-import app.vercel.rahulgtst.strategies.TokenBucketStrategy;
+import app.vercel.rahulgtst.strategies.*;
 
 import java.util.Scanner;
 
@@ -63,6 +60,17 @@ public class Main {
 
         for(int i = 1; i <= 5; i++) {
             boolean isValid = tokenBucket.check(new Request("12345"));
+
+            System.out.println(
+                    i + (isValid ? " Request is valid!" : " Request is invalid!")
+            );
+        }
+
+        RateLimiter leakyBucket =
+                new RateLimiter(new LeakyBucketStrategy(refillRate, capacity));
+
+        for(int i = 1; i <= 5; i++) {
+            boolean isValid = leakyBucket.check(new Request("12345"));
 
             System.out.println(
                     i + (isValid ? " Request is valid!" : " Request is invalid!")
