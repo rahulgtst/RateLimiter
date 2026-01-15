@@ -17,6 +17,7 @@ public class SlidingWindowStrategy implements RateLimiterStrategy {
         this.store = new ConcurrentHashMap<>();
     }
 
+    @Override
     public boolean check(Request req) {
         String userId = req.getUserId();
         long now = System.currentTimeMillis();
