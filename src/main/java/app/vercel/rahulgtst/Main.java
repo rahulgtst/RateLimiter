@@ -4,6 +4,7 @@ import app.vercel.rahulgtst.entities.Request;
 import app.vercel.rahulgtst.strategies.FixedWindowStrategy;
 import app.vercel.rahulgtst.strategies.RateLimiterStrategy;
 import app.vercel.rahulgtst.strategies.SlidingWindowStrategy;
+import app.vercel.rahulgtst.strategies.TokenBucketStrategy;
 
 import java.util.Scanner;
 
@@ -45,6 +46,23 @@ public class Main {
 
         for(int i = 1; i <= 5; i++) {
             boolean isValid = slidingLimiter.check(new Request("1234"));
+
+            System.out.println(
+                    i + (isValid ? " Request is valid!" : " Request is invalid!")
+            );
+        }
+
+        System.out.println("Refill rate per seconds:");
+        double refillRate = sc.nextDouble();
+
+        System.out.println("Max capacity:");
+        double capacity = sc.nextDouble();
+
+        RateLimiter tokenBucket =
+                new RateLimiter(new TokenBucketStrategy(refillRate, capacity));
+
+        for(int i = 1; i <= 5; i++) {
+            boolean isValid = tokenBucket.check(new Request("12345"));
 
             System.out.println(
                     i + (isValid ? " Request is valid!" : " Request is invalid!")
