@@ -1,6 +1,7 @@
 package app.vercel.rahulgtst.strategies;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import app.vercel.rahulgtst.entities.FixedWindow;
 import app.vercel.rahulgtst.entities.Request;
@@ -20,7 +21,7 @@ public class FixedWindowStrategy implements RateLimiterStrategy {
     public boolean check(Request req) {
         String userId = req.getUserId();
         long now = System.currentTimeMillis();
-        final boolean[] allowed = {true};
+        AtomicBoolean allowed = new AtomicBoolean(true);
 
         store.compute(userId, (key, window) -> {
             // First request for user
@@ -37,7 +38,7 @@ public class FixedWindowStrategy implements RateLimiterStrategy {
 
             // Limit exceeded
             if (window.getCount() >= MAX_LIMIT) {
-                allowed[0] = false;
+                allowed.set(false);
                 return window;
             }
 
@@ -45,6 +46,6 @@ public class FixedWindowStrategy implements RateLimiterStrategy {
             window.setCount(window.getCount() + 1);
             return window;
         });
-        return allowed[0];
+        return allowed.get();
     }
 }
