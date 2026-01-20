@@ -1,6 +1,7 @@
 package app.vercel.rahulgtst.strategies;
 
 import java.util.concurrent.ConcurrentHashMap;
+
 import app.vercel.rahulgtst.entities.FixedWindow;
 import app.vercel.rahulgtst.entities.Request;
 
@@ -10,37 +11,40 @@ public class FixedWindowStrategy implements RateLimiterStrategy {
     private final long DURATION;
 
     public FixedWindowStrategy(long max_limit, long duration) {
-        MAX_LIMIT=max_limit;
-        DURATION=duration;
+        MAX_LIMIT = max_limit;
+        DURATION = duration;
         store = new ConcurrentHashMap<>();
     }
 
     @Override
     public boolean check(Request req) {
         String userId = req.getUserId();
-        FixedWindow window = store.get(userId);
         long now = System.currentTimeMillis();
+        final boolean[] allowed = {true};
 
-        // First request for user
-        if (window == null) {
-            store.put(userId, new FixedWindow(1, now));
-            return true;
-        }
+        store.compute(userId, (key, window) -> {
+            // First request for user
+            if (window == null) {
+                return new FixedWindow(1, now);
+            }
 
-        // Window expired → reset
-        if (now - window.getTimestamp() > DURATION * 1000) {
-            window.setCount(1);
-            window.setTimestamp(now);
-            return true;
-        }
+            // Window expired → reset
+            if (now - window.getTimestamp() > DURATION * 1000) {
+                window.setCount(1);
+                window.setTimestamp(now);
+                return window;
+            }
 
-        // Limit exceeded
-        if (window.getCount() >= MAX_LIMIT) {
-            return false;
-        }
+            // Limit exceeded
+            if (window.getCount() >= MAX_LIMIT) {
+                allowed[0] = false;
+                return window;
+            }
 
-        // Increment count
-        window.setCount(window.getCount() + 1);
-        return true;
+            // Increment count
+            window.setCount(window.getCount() + 1);
+            return window;
+        });
+        return allowed[0];
     }
 }
