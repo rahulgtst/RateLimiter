@@ -1,14 +1,14 @@
 package app.vercel.rahulgtst.strategies;
 
 import app.vercel.rahulgtst.entities.LeakyBucket;
-import app.vercel.rahulgtst.entities.Request;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class LeakyBucketStrategy implements RateLimiterStrategy {
+public class LeakyBucketStrategy<K> implements RateLimiterStrategy<K> {
     private final double CAPACITY;
     private final double LEAK_RATE; // leak rate per second
-    private final ConcurrentHashMap<String, LeakyBucket> store;
+    private final ConcurrentHashMap<K, LeakyBucket> store;
 
     public LeakyBucketStrategy(double LEAK_RATE, double CAPACITY) {
         this.CAPACITY = CAPACITY;
@@ -17,12 +17,11 @@ public class LeakyBucketStrategy implements RateLimiterStrategy {
     }
 
     @Override
-    public boolean check(Request req) {
-        String userId = req.getUserId();
+    public boolean allow(K key) {
         long now = System.currentTimeMillis();
-        final boolean[] allowed = {true};
+        AtomicBoolean allowed = new AtomicBoolean(true);
 
-        store.compute(userId, (key, bucket) -> {
+        store.compute(key, (id, bucket) -> {
             if(bucket == null) {
                 bucket = new LeakyBucket(0, now);
             }
@@ -33,13 +32,13 @@ public class LeakyBucketStrategy implements RateLimiterStrategy {
             bucket.setTimestamp(now);
 
             if(bucket.getCurrent()+1 > CAPACITY) {
-                allowed[0] = false;
+                allowed.set(false);
                 return bucket;
             }
 
             bucket.setCurrent(current+1);
             return bucket;
         });
-        return allowed[0];
+        return allowed.get();
     }
 }

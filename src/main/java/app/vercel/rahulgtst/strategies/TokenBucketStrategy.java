@@ -1,14 +1,14 @@
 package app.vercel.rahulgtst.strategies;
 
-import app.vercel.rahulgtst.entities.Request;
 import app.vercel.rahulgtst.entities.TokenBucket;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class TokenBucketStrategy implements RateLimiterStrategy {
+public class TokenBucketStrategy<K> implements RateLimiterStrategy<K> {
     private final double REFILL_RATE; // Refill Rate Per Second
     private final double CAPACITY;
-    private final ConcurrentHashMap<String, TokenBucket> store;
+    private final ConcurrentHashMap<K, TokenBucket> store;
 
     public TokenBucketStrategy(double REFILL_RATE, double CAPACITY) {
         this.REFILL_RATE = REFILL_RATE;
@@ -17,13 +17,12 @@ public class TokenBucketStrategy implements RateLimiterStrategy {
     }
 
     @Override
-    public boolean check(Request req) {
-        String userId = req.getUserId();
+    public boolean allow(K key) {
         long now = System.currentTimeMillis();
 
-        final boolean[] allowed = {true};
+        AtomicBoolean allowed = new AtomicBoolean(true);
 
-        store.compute(userId, (key, bucket) -> {
+        store.compute(key, (id, bucket) -> {
             if (bucket == null) {
                 TokenBucket newBucket = new TokenBucket(CAPACITY, now);
                 newBucket.setTokens(newBucket.getTokens() - 1);
@@ -37,7 +36,7 @@ public class TokenBucketStrategy implements RateLimiterStrategy {
             bucket.setTimestamp(now);
 
             if (bucket.getTokens() < 1) {
-                allowed[0] = false;
+                allowed.set(false);
                 return bucket;
             }
 
@@ -45,6 +44,6 @@ public class TokenBucketStrategy implements RateLimiterStrategy {
             return bucket;
         });
 
-        return allowed[0];
+        return allowed.get();
     }
 }

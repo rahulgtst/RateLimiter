@@ -1,7 +1,5 @@
 package app.vercel.rahulgtst.strategies;
 
-import app.vercel.rahulgtst.entities.Request;
-
-public interface RateLimiterStrategy {
-    boolean check(Request req);
+public interface RateLimiterStrategy<K> {
+    boolean allow(K key);
 }

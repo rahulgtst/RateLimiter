@@ -1,19 +1,18 @@
 package app.vercel.rahulgtst;
 
-import app.vercel.rahulgtst.entities.Request;
 import app.vercel.rahulgtst.strategies.*;
 
 import java.util.Scanner;
 
-class RateLimiter {
-    private final RateLimiterStrategy rateLimiterStrategy;
+class RateLimiter<K> {
+    private final RateLimiterStrategy<K> rateLimiterStrategy;
 
-    public RateLimiter(RateLimiterStrategy strategy) {
+    public RateLimiter(RateLimiterStrategy<K> strategy) {
         rateLimiterStrategy = strategy;
     }
 
-    public boolean check(Request req) {
-        return rateLimiterStrategy.check(req);
+    public boolean check(K key) {
+        return rateLimiterStrategy.allow(key);
     }
 }
 
@@ -27,22 +26,22 @@ public class Main {
         System.out.println("Max request limit:");
         long limit = sc.nextLong();
 
-        RateLimiter limiter =
-                new RateLimiter(new FixedWindowStrategy(limit, duration));
+        RateLimiter<String> limiter =
+                new RateLimiter<>(new FixedWindowStrategy<>(limit, duration));
 
         for(int i = 1; i <= 5; i++) {
-            boolean isValid = limiter.check(new Request("123"));
+            boolean isValid = limiter.check("123");
 
             System.out.println(
                     i + (isValid ? " Request is valid!" : " Request is invalid!")
             );
         }
 
-        RateLimiter slidingLimiter =
-                new RateLimiter(new SlidingWindowStrategy(limit, duration));
+        RateLimiter<String> slidingLimiter =
+                new RateLimiter<>(new SlidingWindowStrategy<>(limit, duration));
 
         for(int i = 1; i <= 5; i++) {
-            boolean isValid = slidingLimiter.check(new Request("1234"));
+            boolean isValid = slidingLimiter.check("1234");
 
             System.out.println(
                     i + (isValid ? " Request is valid!" : " Request is invalid!")
@@ -55,22 +54,22 @@ public class Main {
         System.out.println("Max capacity:");
         double capacity = sc.nextDouble();
 
-        RateLimiter tokenBucket =
-                new RateLimiter(new TokenBucketStrategy(refillRate, capacity));
+        RateLimiter<String> tokenBucket =
+                new RateLimiter<>(new TokenBucketStrategy<>(refillRate, capacity));
 
         for(int i = 1; i <= 5; i++) {
-            boolean isValid = tokenBucket.check(new Request("12345"));
+            boolean isValid = tokenBucket.check("12345");
 
             System.out.println(
                     i + (isValid ? " Request is valid!" : " Request is invalid!")
             );
         }
 
-        RateLimiter leakyBucket =
-                new RateLimiter(new LeakyBucketStrategy(refillRate, capacity));
+        RateLimiter<String> leakyBucket =
+                new RateLimiter<>(new LeakyBucketStrategy<>(refillRate, capacity));
 
         for(int i = 1; i <= 5; i++) {
-            boolean isValid = leakyBucket.check(new Request("12345"));
+            boolean isValid = leakyBucket.check("12345");
 
             System.out.println(
                     i + (isValid ? " Request is valid!" : " Request is invalid!")

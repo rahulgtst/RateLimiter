@@ -1,13 +1,13 @@
 package app.vercel.rahulgtst.strategies;
 
-import app.vercel.rahulgtst.entities.Request;
 import app.vercel.rahulgtst.entities.SlidingWindow;
 
 import java.util.ArrayDeque;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class SlidingWindowStrategy implements RateLimiterStrategy {
-    private final ConcurrentHashMap<String, SlidingWindow> store;
+public class SlidingWindowStrategy<K> implements RateLimiterStrategy<K> {
+    private final ConcurrentHashMap<K, SlidingWindow> store;
     private final long MAX_LIMIT;
     private final long DURATION;
 
@@ -18,13 +18,12 @@ public class SlidingWindowStrategy implements RateLimiterStrategy {
     }
 
     @Override
-    public boolean check(Request req) {
-        String userId = req.getUserId();
+    public boolean allow(K key) {
         long now = System.currentTimeMillis();
 
-        final boolean[] allowed = {true};
+        AtomicBoolean allowed = new AtomicBoolean(true);
 
-        store.compute(userId, (key, window) -> {
+        store.compute(key, (id, window) -> {
             if (window == null) {
                 ArrayDeque<Long> deque = new ArrayDeque<>();
                 deque.addLast(now);
@@ -39,7 +38,7 @@ public class SlidingWindowStrategy implements RateLimiterStrategy {
             }
 
             if (deque.size() >= MAX_LIMIT) {
-                allowed[0] = false;
+                allowed.set(false);
                 return window;
             }
 
@@ -47,6 +46,6 @@ public class SlidingWindowStrategy implements RateLimiterStrategy {
             return window;
         });
 
-        return allowed[0];
+        return allowed.get();
     }
 }
